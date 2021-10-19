@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import pouchdb from "pouchdb";
 
 function TodoApp() {
 	var db = new pouchdb("bijaysharma");
 	const [task, setTask] = useState("");
 	const [tasklist, setTasklist] = useState([]);
-	const [list, setList] = useState([]);
 
 	const handleChange = (e) => {
 		setTask(e.target.value);
@@ -25,7 +23,6 @@ function TodoApp() {
                 console.log( data )
                 data.rows.forEach( dd => {
                     console.log( dd.doc )
-                    /* setTasklist([...tasklist, dd.doc]); *//*  */
                     temp.push(dd.doc)
                 })
 			})
@@ -34,30 +31,7 @@ function TodoApp() {
          	setTasklist(temp)/*  */
         
         console.log(temp)
-        
-
-		/* .then((data) => {
-				{
-				
-						 data[0].doc.map((t) => (
-								<ul>
-									<li>
-										<span>{t.name}</span>
-
-										<button
-											onClick={(e) => {
-												deleteTask(t._id, t.rev);
-											}}
-										>
-											Delete
-										</button>
-									</li>
-								</ul>
-						  ))
-						
-				}
-				<button onClick={DestroyDatabase}>Destroy</button>;
-			}) */
+     
 	}, []);
 
 	const deleteHandler = (id, e) => {
