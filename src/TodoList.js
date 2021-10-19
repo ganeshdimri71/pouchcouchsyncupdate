@@ -10,100 +10,117 @@ function TodoApp() {
 		setTask(e.target.value);
 	};
 
-    useEffect(  async () => {
-        let temp = [];
-		 await db.query(
-			function (doc, emit) {
-				emit(doc.type);
-			},
-			{ key: "task", include_docs: true }
-		)
-			
-            .then( ( data ) => {
-                console.log( data )
-                data.rows.forEach( dd => {
-                    console.log( dd.doc )
-                    temp.push(dd.doc)
-                })
-			})
-            .catch();
+    useEffect( async () => {
         
-         	setTasklist(temp)/*  */
-        
-        console.log(temp)
-     
-	}, []);
+			let temp = [];
+			await db
+				.query(
+					function (doc, emit) {
+						emit(doc.type);
+					},
+					{ key: "task", include_docs: true }
+				)
 
-	const deleteHandler = (id, e) => {
-		setTasklist(tasklist.filter((t) => t._id !== id));
-	};
-
-	const addTask = (e) => {
-		if (task !== "") {
-			var doc = {
-				_id: new Date().toISOString(),
-				type: "task",
-				name: task,
-			};
-			db.put(doc)
-				.then((res) => {
-					console.log("Document is inserted...!", doc);
-					console.log(res.rev);
-					doc.rev = res.rev;
+				.then((data) => {
+					console.log(data);
+					data.rows.forEach((dd) => {
+						console.log(dd.doc);
+						temp.push(dd.doc);
+					});
 				})
-				.catch((err) => {
-					console.log(err);
-				});
+				.catch();
 
-			setTasklist([...tasklist, doc]);
-			console.log(tasklist);
+			setTasklist(temp);
+
+			console.log(temp);
+		}, []);
+
+		const deleteHandler = (id, e) => {
+			setTasklist(tasklist.filter((t) => t._id !== id));
+		};
+
+		const addTask = (e) => {
+			if (task !== "") {
+				var doc = {
+					_id: new Date().toISOString(),
+					type: "task",
+					name: task,
+				};
+				db.put(doc)
+					.then((res) => {
+						console.log("Document is inserted...!", doc);
+						console.log(res.rev);
+						doc.rev = res.rev;
+					})
+					.catch((err) => {
+						console.log(err);
+					});
+
+				setTasklist([...tasklist, doc]);
+				console.log(tasklist);
+			}
+
+			db.allDocs(function (err, docs) {
+				if (err) {
+					return console.log(err);
+				} else {
+					console.log("Added", docs.rows);
+				}
+			});
+		};
+
+		const deleteTask = (id, rev, e) => {
+			const deleteId = id;
+			deleteHandler(deleteId, e);
+
+			db.remove(`${id}`, `${rev}`, function (err) {
+				if (err) {
+					return console.log(err);
+				} else {
+					console.log("Document deleted successfully");
+				}
+			});
+			db.allDocs(function (err, docs) {
+				if (err) {
+					return console.log(err);
+				} else {
+					console.log("deleted", docs.rows);
+				}
+			});
+		};
+
+		function DestroyDatabase() {
+			db.destroy(function (err, res) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log("Database is deleted...!");
+				}
+			});
 		}
 
-		db.allDocs(function (err, docs) {
-			if (err) {
-				return console.log(err);
-			} else {
-				console.log("Added", docs.rows);
-			}
-		});
-	};
-
-	const deleteTask = (id, rev, e) => {
-		const deleteId = id;
-		deleteHandler(deleteId, e);
-
-		db.remove(`${id}`, `${rev}`, function (err) {
-			if (err) {
-				return console.log(err);
-			} else {
-				console.log("Document deleted successfully");
-			}
-		});
-		db.allDocs(function (err, docs) {
-			if (err) {
-				return console.log(err);
-			} else {
-				console.log("deleted", docs.rows);
-			}
-		});
-	};
-
-	function DestroyDatabase() {
-		db.destroy(function (err, res) {
-			if (err) {
-				console.log(err);
-			} else {
-				console.log("Database is deleted...!");
-			}
-		});
-	}
-
-	var remoteDB = new pouchdb("http://localhost:5984/bijaysharma");
-	db.sync(remoteDB);
-	/* db.sync(remoteDB, {
+		var remoteDB = new pouchdb("http://localhost:5984/bijaysharma");
+	/* 	db.sync(remoteDB);  */
+		/* 	db.sync(remoteDB, {
         live: true,
         retry: true,
-    }); */
+    });  */
+
+       db.replicate.from(remoteDB);
+				db.replicate.to(remoteDB, {
+					live: true,
+					retry: true,
+				});
+
+		/* db.sync(remoteDB, {
+			live: true,
+		})
+			.on("change", function (change) {
+				// yo, something changed!
+			})
+			.on("error", function (err) {
+				// yo, we got an error! (maybe the user went offline?)
+			}); */
 
 	return (
 		<div className="todo">
