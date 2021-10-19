@@ -6,28 +6,59 @@ function TodoApp() {
 	var db = new pouchdb("bijaysharma");
 	const [task, setTask] = useState("");
 	const [tasklist, setTasklist] = useState([]);
+	const [list, setList] = useState([]);
 
 	const handleChange = (e) => {
 		setTask(e.target.value);
 	};
 
-	/* useEffect(() => {
-		let username = "admin";
-		let password = "admin";
-		const token = Buffer.from(`${username}:${password}`, "utf8").toString(
-			"base64"
-		);
-	
-		axios
-			.get("http://localhost:5984/bijaysharma", {
-				headers: {
-					Authorization: `Basic ${token}`,
-				},
+    useEffect(  async () => {
+        let temp = [];
+		 await db.query(
+			function (doc, emit) {
+				emit(doc.type);
+			},
+			{ key: "task", include_docs: true }
+		)
+			
+            .then( ( data ) => {
+                console.log( data )
+                data.rows.forEach( dd => {
+                    console.log( dd.doc )
+                    /* setTasklist([...tasklist, dd.doc]); *//*  */
+                    temp.push(dd.doc)
+                })
 			})
-			.then((response) => {
-				console.log("The value of the data is ", response.data);
-			});
-	}, []); */
+            .catch();
+        
+         	setTasklist(temp)/*  */
+        
+        console.log(temp)
+        
+
+		/* .then((data) => {
+				{
+				
+						 data[0].doc.map((t) => (
+								<ul>
+									<li>
+										<span>{t.name}</span>
+
+										<button
+											onClick={(e) => {
+												deleteTask(t._id, t.rev);
+											}}
+										>
+											Delete
+										</button>
+									</li>
+								</ul>
+						  ))
+						
+				}
+				<button onClick={DestroyDatabase}>Destroy</button>;
+			}) */
+	}, []);
 
 	const deleteHandler = (id, e) => {
 		setTasklist(tasklist.filter((t) => t._id !== id));
@@ -37,6 +68,7 @@ function TodoApp() {
 		if (task !== "") {
 			var doc = {
 				_id: new Date().toISOString(),
+				type: "task",
 				name: task,
 			};
 			db.put(doc)
@@ -103,7 +135,7 @@ function TodoApp() {
 		<div className="todo">
 			<input type="text" onChange={handleChange} />
 			<button onClick={addTask}>Add</button>
-
+        {console.log(tasklist)}
 			{tasklist !== []
 				? tasklist.map((t) => (
 						<ul>
