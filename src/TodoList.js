@@ -22,7 +22,7 @@ function TodoApp() {
 				)
 
 				.then((data) => {
-					console.log(data);
+					console.log(data.rows);
 					data.rows.forEach((dd) => {
 						console.log(dd.doc);
 						temp.push(dd.doc);
